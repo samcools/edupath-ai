@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#071426" />
+  <title>EduPath AI by Pyrneo</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <main id="loginView" class="login-shell">
+    <section class="login-brand">
+      <div class="brand-kicker">PYRNEO PRESENTS</div>
+      <h1>EduPath AI</h1>
+      <p class="tagline">One Learner. One Learning Journey. Equal Opportunity.</p>
+      <div class="impact-grid">
+        <article><strong>Personalised</strong><span>AI-assisted learning support</span></article>
+        <article><strong>Inclusive</strong><span>Multilingual and voice-ready</span></article>
+        <article><strong>Governed</strong><span>Human-reviewed actions and audit</span></article>
+      </div>
+      <p class="synthetic-note">Hackathon prototype using synthetic demonstration data.</p>
+    </section>
+
+    <section class="login-card" aria-labelledby="loginTitle">
+      <div class="pyrneo-wordmark" aria-label="Pyrneo">
+        <span>P</span><span class="pyrneo-y">Y</span><span>R</span><span>N</span><span>E</span><span>O</span>
+      </div>
+      <h2 id="loginTitle">Welcome to EduPath AI</h2>
+      <p>Choose your user type and sign in to your education workspace.</p>
+      <form id="loginForm">
+        <label>User Type
+          <select id="userType" required>
+            <option value="">Select user type…</option>
+            <option value="learner">Learner</option>
+            <option value="teacher">Teacher</option>
+            <option value="parent">Parent / Guardian</option>
+            <option value="principal">Principal / School Administrator</option>
+            <option value="district">District Official</option>
+            <option value="provincial">Provincial Official</option>
+            <option value="national">National Education Analyst</option>
+            <option value="admin">Platform Administrator</option>
+            <option value="support">Support Administrator</option>
+          </select>
+        </label>
+        <label>Email / Username
+          <input id="email" type="email" autocomplete="username" value="learner@demo.edupath.local" required />
+        </label>
+        <label>Password
+          <div class="password-wrap"><input id="password" type="password" autocomplete="current-password" value="Demo123!" required /><button id="showPassword" type="button" class="text-button" aria-label="Show password">Show</button></div>
+        </label>
+        <button class="primary-button" type="submit">Sign in securely</button>
+      </form>
+      <div class="demo-helper">
+        <strong>Demo:</strong> choose a role; the matching account will load automatically. The selected role never grants permissions—the server validates it.
+      </div>
+    </section>
+  </main>
+
+  <div id="appView" class="app-shell hidden">
+    <header class="topbar">
+      <div class="product-brand"><strong>EduPath AI</strong><span>by Pyrneo</span></div>
+      <nav id="topNav" aria-label="Primary navigation"></nav>
+      <div class="top-actions">
+        <select id="language" aria-label="Assistant language">
+          <option value="en-ZA">English</option><option value="af-ZA">Afrikaans</option><option value="zu-ZA">isiZulu</option><option value="xh-ZA">isiXhosa</option><option value="st-ZA">Sesotho</option><option value="tn-ZA">Setswana</option><option value="nso-ZA">Sepedi</option><option value="ts-ZA">itsonga</option><option value="ve-ZA">Tshivenda</option><option value="ss-ZA">siSwati</option><option value="nr-ZA">isiNdebele</option>
+        </select>
+        <button id="logoutBtn" class="ghost-button">Sign out</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <aside class="sidebar">
+        <div class="identity-card"><div class="avatar" id="avatar">E</div><div><strong id="userName">User</strong><span id="userRole">Role</span></div></div>
+        <nav id="sideNav" aria-label="Workspace navigation"></nav>
+        <div class="sidebar-foot"><span class="status-dot"></span> Demo environment<br><small>Synthetic data only</small></div>
+      </aside>
+
+      <main class="content" id="content">
+        <section class="hero-row">
+          <div><div class="eyebrow" id="roleEyebrow">OVERVIEW</div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Education intelligence and learner support.</p></div>
+          <div class="hero-actions"><button class="ghost-button" data-command="activity">Recent activity</button><button class="primary-button" data-command="assistant">Ask Ayanda</button></div>
+        </section>
+        <section id="kpis" class="kpi-grid"></section>
+        <section id="mainPanels" class="panel-grid"></section>
+      </main>
+    </div>
+
+    <button id="assistantLauncher" class="assistant-launcher" aria-label="Open Ayanda assistant"><span class="pulse"></span>A</button>
+    <aside id="assistantPanel" class="assistant-panel hidden" aria-label="Ayanda assistant">
+      <header><div><strong>Ayanda</strong><span>EduPath AI Assistant</span></div><div class="assistant-controls"><button id="stopVoice" title="Stop speaking">■</button><button id="closeAssistant" title="Close">×</button></div></header>
+      <div class="assistant-context"><span class="status-dot"></span> Governed assistance · human review for record changes</div>
+      <div id="messages" class="messages"><div class="message ayanda">Sawubona. I’m Ayanda. I can explain learning concepts, open pages and help authorised users prepare governed actions.</div></div>
+      <div class="quick-prompts"><button data-prompt="Open Mathematics">Open Mathematics</button><button data-prompt="Show my assignments">Show assignments</button><button data-prompt="Explain corresponding angles">Explain geometry</button></div>
+      <form id="assistantForm" class="composer"><button id="micBtn" type="button" title="Voice input">🎙</button><input id="assistantInput" placeholder="Ask Ayanda or give a command…" autocomplete="off" /><button type="submit">Send</button></form>
+    </aside>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
