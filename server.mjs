@@ -8,20 +8,39 @@ const __dirname=path.dirname(__filename);
 const app=express();
 const port=Number(process.env.PORT||10000);
 const maxPdfBytes=Number(process.env.PROCTOR_REPORT_MAX_BYTES||6_000_000);
+const deliveryWindowMs=60*60*1000;
+const deliveryLimit=Number(process.env.PROCTOR_REPORT_RATE_LIMIT||20);
+const deliveryCounters=new Map();
 
 app.disable('x-powered-by');
+app.set('trust proxy',1);
 app.use(express.json({limit:'9mb'}));
 app.use((req,res,next)=>{
   res.setHeader('X-Content-Type-Options','nosniff');
   res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy','camera=(self), microphone=(self)');
+  res.setHeader('Cross-Origin-Resource-Policy','same-origin');
   next();
 });
 
 const emailPattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const clean=(v,max=180)=>String(v??'').trim().slice(0,max);
 const smtpConfigured=()=>Boolean(process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS&&(process.env.SMTP_FROM||process.env.SMTP_USER));
+const allowedDomains=()=>String(process.env.PROCTOR_REPORT_ALLOWED_DOMAINS||'').split(',').map(v=>v.trim().toLowerCase()).filter(Boolean);
 
+function sameOrigin(req){
+  const origin=req.get('origin');if(!origin)return true;
+  try{return new URL(origin).host===req.get('host');}catch{return false;}
+}
+function rateAllowed(req){
+  const key=req.ip||'unknown';const now=Date.now();const state=deliveryCounters.get(key)||{start:now,count:0};
+  if(now-state.start>deliveryWindowMs){state.start=now;state.count=0;}
+  state.count+=1;deliveryCounters.set(key,state);return state.count<=deliveryLimit;
+}
+function domainAllowed(email){
+  const list=allowedDomains();if(!list.length)return true;
+  const domain=String(email).split('@')[1]?.toLowerCase()||'';return list.includes(domain);
+}
 function mailer(){
   if(!smtpConfigured())return null;
   return nodemailer.createTransport({
@@ -36,11 +55,14 @@ function mailer(){
 }
 
 app.get('/api/proctoring/report/status',(_req,res)=>{
-  res.json({emailDeliveryConfigured:smtpConfigured(),provider:smtpConfigured()?'smtp':'not-configured'});
+  res.json({emailDeliveryConfigured:smtpConfigured(),provider:smtpConfigured()?'smtp':'not-configured',allowedDomainsConfigured:allowedDomains().length>0});
 });
 
 app.post('/api/proctoring/report/send',async(req,res)=>{
   try{
+    if(!sameOrigin(req))return res.status(403).json({ok:false,error:'Cross-origin report delivery is not permitted.'});
+    if(!rateAllowed(req))return res.status(429).json({ok:false,error:'Report delivery rate limit reached. Please try again later.'});
+
     const studentEmail=clean(req.body?.studentEmail,254);
     const teacherEmail=clean(req.body?.teacherEmail,254);
     const studentName=clean(req.body?.studentName||'Student');
@@ -51,6 +73,7 @@ app.post('/api/proctoring/report/send',async(req,res)=>{
     const pdfBase64=String(req.body?.pdfBase64||'');
 
     if(!emailPattern.test(studentEmail)||!emailPattern.test(teacherEmail))return res.status(400).json({ok:false,error:'Valid student and teacher email addresses are required.'});
+    if(!domainAllowed(studentEmail)||!domainAllowed(teacherEmail))return res.status(403).json({ok:false,error:'One or more recipient domains are not permitted by the institution delivery policy.'});
     if(!pdfBase64)return res.status(400).json({ok:false,error:'PDF report is required.'});
 
     const attachment=Buffer.from(pdfBase64,'base64');
