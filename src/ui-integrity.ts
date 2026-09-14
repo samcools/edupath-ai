@@ -57,7 +57,8 @@ function hardenButtons(root:ParentNode=document){
   });
 }
 
-if('requestIdleCallback' in window){(window as any).requestIdleCallback(()=>hardenButtons(),{timeout:800});}
-else window.setTimeout(()=>hardenButtons(),0);
+const idle=(window as any).requestIdleCallback as ((cb:()=>void,opts?:{timeout:number})=>number)|undefined;
+if(idle)idle(()=>hardenButtons(),{timeout:800});
+else globalThis.setTimeout(()=>hardenButtons(),0);
 
 window.addEventListener('edupath:page-mounted',(event:any)=>{const root=event?.detail?.root as ParentNode|undefined;hardenButtons(root||document);});
