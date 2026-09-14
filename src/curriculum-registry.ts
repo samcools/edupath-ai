@@ -5,6 +5,7 @@ export type SubjectDefinition = {
   name: string;
   category: 'Language'|'Core'|'Science'|'Humanities'|'Technology'|'Arts'|'Commerce'|'Agriculture'|'Technical'|'Vocational'|'Wellbeing';
   notes?: string;
+  variants?: string[];
 };
 
 export type GradeCurriculum = {
@@ -16,32 +17,37 @@ export type GradeCurriculum = {
 export const grades: Grade[] = ['Grade R','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12'];
 
 export const officialLanguageSubjects = [
-  'Afrikaans','English','isiNdebele','isiXhosa','isiZulu','Sepedi','Sesotho','Setswana','siSwati','Tshivenda','itsonga','South African Sign Language'
+  'Afrikaans','English','isiNdebele','isiXhosa','isiZulu','Sepedi','Sesotho','Setswana','siSwati','Tshivenda','XiTsonga','South African Sign Language'
+];
+export const secondAdditionalLanguages = [
+  'Afrikaans','English','French','isiNdebele','isiXhosa','isiZulu','Mandarin','Sepedi','Sesotho','Setswana','siSwati','Tshivenda','XiTsonga'
 ];
 
+const language=(name:string,variants=officialLanguageSubjects,notes?:string):SubjectDefinition=>({name,category:'Language',variants,notes});
+
 const foundation: SubjectDefinition[] = [
-  {name:'Home Language',category:'Language',notes:'Configured per learner language'},
-  {name:'First Additional Language',category:'Language'},
+  language('Home Language'),
+  language('First Additional Language',officialLanguageSubjects.filter(x=>x!=='South African Sign Language')),
   {name:'Mathematics',category:'Core'},
   {name:'Life Skills',category:'Wellbeing'},
-  {name:'Coding and Robotics',category:'Technology'},
+  {name:'Coding and Robotics',category:'Technology',notes:'Included where implemented by the school / current DBE rollout'},
   {name:'South African Sign Language',category:'Language',notes:'Visual/sign-language curriculum where applicable'}
 ];
 
 const intermediate: SubjectDefinition[] = [
-  {name:'Home Language',category:'Language'},
-  {name:'First Additional Language',category:'Language'},
+  language('Home Language'),
+  language('First Additional Language',officialLanguageSubjects.filter(x=>x!=='South African Sign Language')),
   {name:'Mathematics',category:'Core'},
   {name:'Natural Sciences and Technology',category:'Science'},
   {name:'Social Sciences',category:'Humanities'},
   {name:'Life Skills',category:'Wellbeing'},
-  {name:'Coding and Robotics',category:'Technology'},
+  {name:'Coding and Robotics',category:'Technology',notes:'Included where implemented by the school / current DBE rollout'},
   {name:'South African Sign Language',category:'Language',notes:'Visual/sign-language curriculum where applicable'}
 ];
 
 const senior: SubjectDefinition[] = [
-  {name:'Home Language',category:'Language'},
-  {name:'First Additional Language',category:'Language'},
+  language('Home Language'),
+  language('First Additional Language',officialLanguageSubjects.filter(x=>x!=='South African Sign Language')),
   {name:'Mathematics',category:'Core'},
   {name:'Natural Sciences',category:'Science'},
   {name:'Social Sciences',category:'Humanities'},
@@ -49,14 +55,14 @@ const senior: SubjectDefinition[] = [
   {name:'Economic and Management Sciences',category:'Commerce'},
   {name:'Life Orientation',category:'Wellbeing'},
   {name:'Creative Arts',category:'Arts'},
-  {name:'Coding and Robotics',category:'Technology'},
+  {name:'Coding and Robotics',category:'Technology',notes:'Included where implemented by the school / current DBE rollout'},
   {name:'South African Sign Language',category:'Language',notes:'Visual/sign-language curriculum where applicable'}
 ];
 
 const fet: SubjectDefinition[] = [
-  {name:'Home Language',category:'Language'},
-  {name:'First Additional Language',category:'Language'},
-  {name:'Second Additional Language',category:'Language',notes:'Where offered by the institution'},
+  language('Home Language'),
+  language('First Additional Language',officialLanguageSubjects.filter(x=>x!=='South African Sign Language')),
+  language('Second Additional Language',secondAdditionalLanguages,'Where offered by the institution'),
   {name:'South African Sign Language',category:'Language',notes:'Where offered'},
   {name:'Accounting',category:'Commerce'},
   {name:'Agricultural Management Practices',category:'Agriculture'},
@@ -113,7 +119,7 @@ export function getCurriculum(grade: Grade) {
 }
 
 export function getAllSubjectNames() {
-  return [...new Set(curriculumRegistry.flatMap(item => item.subjects.map(s => s.name)))].sort((a,b)=>a.localeCompare(b));
+  return [...new Set(curriculumRegistry.flatMap(item => item.subjects.flatMap(s => [s.name,...(s.variants||[])])))].sort((a,b)=>a.localeCompare(b));
 }
 
 export const curriculumSources = [
