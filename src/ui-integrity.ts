@@ -12,15 +12,16 @@ function activateSidebarByLabel(label:string){
   if(!clean)return false;
   const sidebar=[...document.querySelectorAll<HTMLButtonElement>('.app-shell aside button')];
   const exact=sidebar.find(b=>(b.textContent||'').trim().toLowerCase()===clean);
-  const partial=sidebar.find(b=>{const t=(b.textContent||'').trim().toLowerCase();return clean.includes(t)||t.includes(clean);});
-  const match=exact||partial;
-  if(!match)return false;
-  match.click();
+  if(!exact)return false;
+  exact.click();
   return true;
 }
 
-// One delegated click handler keeps dynamically rendered pages functional without
-// repeatedly walking the full DOM on every mutation.
+function requestDetail(label:string){window.dispatchEvent(new CustomEvent('edupath:detail-request',{detail:{label}}));}
+
+// One lightweight delegated handler keeps dynamic content interactive without
+// document-wide mutation rescans. Rows now open contextual detail rather than
+// triggering accidental partial-label navigation.
 document.addEventListener('click',event=>{
   const target=event.target as HTMLElement;
 
@@ -32,8 +33,9 @@ document.addEventListener('click',event=>{
 
   const item=target.closest<HTMLElement>('.module-list li');
   if(item){
-    const label=item.querySelector('span')?.textContent?.trim()||item.textContent?.trim()||'';
-    if(activateSidebarByLabel(label))event.preventDefault();
+    event.preventDefault();
+    const label=item.querySelector('span')?.textContent?.trim()||item.textContent?.trim()||'Details';
+    requestDetail(label);
     return;
   }
 
@@ -42,14 +44,12 @@ document.addEventListener('click',event=>{
     const href=anchor.getAttribute('href')||'';
     if(href==='#'||href.trim()===''){
       event.preventDefault();
-      const label=anchor.textContent?.trim()||anchor.getAttribute('aria-label')||'';
-      activateSidebarByLabel(label);
+      const label=anchor.textContent?.trim()||anchor.getAttribute('aria-label')||'Details';
+      if(!activateSidebarByLabel(label))requestDetail(label);
     }
   }
 },true);
 
-// Harden currently mounted buttons once. Dynamic modules already create explicit
-// type="button" controls; avoiding a document-wide MutationObserver prevents UI stalls.
 function hardenButtons(root:ParentNode=document){
   root.querySelectorAll<HTMLButtonElement>('button').forEach(button=>{
     if(!button.getAttribute('type'))button.type='button';
