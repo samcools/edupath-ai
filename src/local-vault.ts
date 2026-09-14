@@ -33,7 +33,8 @@ export async function putVaultFile(file: File, category: VaultRecord['category']
     tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
   });
   db.close();
-  return {...record,data:undefined as never};
+  const {data: _data, ...meta}=record;
+  return meta;
 }
 
 export async function putTextRecord(name:string,text:string,category:VaultRecord['category'],type='application/json'):Promise<Omit<VaultRecord,'data'>> {
@@ -48,7 +49,7 @@ export async function listVaultFiles(): Promise<Omit<VaultRecord,'data'>[]> {
     req.onsuccess=()=>resolve(req.result as VaultRecord[]); req.onerror=()=>reject(req.error);
   });
   db.close();
-  return rows.map(({data,...meta})=>meta).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  return rows.map(({data: _data,...meta})=>meta).sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getVaultFile(id:string):Promise<VaultRecord|null>{
