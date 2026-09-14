@@ -11,7 +11,7 @@ const languages:Language[]=[
   {code:'st',label:'Sesotho',native:'Sesotho',bcp47:'st-ZA'},
   {code:'tn',label:'Setswana',native:'Setswana',bcp47:'tn-ZA'},
   {code:'nso',label:'Sepedi',native:'Sepedi',bcp47:'nso-ZA'},
-  {code:'ts',label:'Хitsonga',native:'Хitsonga',bcp47:'ts-ZA'},
+  {code:'ts',label:'XITSONGA',native:'itsonga',bcp47:'ts-ZA'},
   {code:'ve',label:'Tshivenda',native:'Tshivenda',bcp47:'ve-ZA'},
   {code:'ss',label:'siSwati',native:'siSwati',bcp47:'ss-ZA'},
   {code:'nr',label:'isiNdebele',native:'isiNdebele',bcp47:'nr-ZA'}
@@ -40,53 +40,67 @@ const phrases:Record<string,Record<string,string>>={
 };
 
 const originals=new WeakMap<Text,string>();
+let scheduled=false;
+
 function currentCode(){const saved=localStorage.getItem(LANG_KEY)||'en';return languages.some(l=>l.code===saved)?saved:'en';}
 function currentLanguage(){return languages.find(l=>l.code===currentCode())||languages[0];}
-function translate(text:string,code=currentCode()){
-  if(code==='en')return text;
-  return phrases[text]?.[code]||text;
-}
+function translate(text:string,code=currentCode()){if(code==='en')return text;return phrases[text]?.[code]||text;}
 
 function applyTextTranslations(root:ParentNode=document){
-  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){const p=node.parentElement;if(!p||['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(p.tagName))return NodeFilter.FILTER_REJECT;return node.textContent?.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}});
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){const p=node.parentElement;if(!p||['SCRIPT','STYLE','TEXTAREA','OPTION'].includes(p.tagName)||p.closest('[data-no-i18n]'))return NodeFilter.FILTER_REJECT;return node.textContent?.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}});
   const nodes:Text[]=[];let n:Node|null;while((n=walker.nextNode()))nodes.push(n as Text);
   const code=currentCode();
-  nodes.forEach(node=>{const current=node.textContent||'';const leading=current.match(/^\s*/)?.[0]||'';const trailing=current.match(/\s*$/)?.[0]||'';if(!originals.has(node))originals.set(node,current.trim());const original=originals.get(node)||current.trim();node.textContent=leading+translate(original,code)+trailing;});
+  nodes.forEach(node=>{const current=node.textContent||'';const leading=current.match(/^\s*/)?.[0]||'';const trailing=current.match(/\s*$/)?.[0]||'';if(!originals.has(node))originals.set(node,current.trim());const original=originals.get(node)||current.trim();const next=leading+translate(original,code)+trailing;if(node.textContent!==next)node.textContent=next;});
+}
+
+function makePicker(extraClass=''){
+  const wrap=document.createElement('label');wrap.className=`language-picker ${extraClass}`.trim();wrap.dataset.languagePicker='true';wrap.innerHTML=`<span>Language</span><select aria-label="Language">${languages.map(l=>`<option value="${l.code}">${l.native}</option>`).join('')}</select>`;bindPicker(wrap);return wrap;
 }
 
 function injectSelector(){
   const code=currentCode();
   const header=document.querySelector<HTMLElement>('.app-shell header');
-  if(header&&!header.querySelector('[data-language-picker]')){
-    const wrap=document.createElement('label');wrap.className='language-picker';wrap.dataset.languagePicker='true';wrap.innerHTML=`<span>Language</span><select aria-label="Language">${languages.map(l=>`<option value="${l.code}" ${l.code===code?'selected':''}>${l.native}</option>`).join('')}</select>`;
-    const user=header.querySelector('.userbox');header.insertBefore(wrap,user||null);bindPicker(wrap);
-  }
+  if(header&&!header.querySelector('[data-language-picker]')){const picker=makePicker('header-language');const user=header.querySelector('.userbox');header.insertBefore(picker,user||null);}
   const login=document.querySelector<HTMLElement>('.login-card');
-  if(login&&!login.querySelector('[data-language-picker]')){
-    const wrap=document.createElement('label');wrap.className='language-picker login-language';wrap.dataset.languagePicker='true';wrap.innerHTML=`<span>Language</span><select aria-label="Language">${languages.map(l=>`<option value="${l.code}" ${l.code===code?'selected':''}>${l.native}</option>`).join('')}</select>`;
-    const password=[...login.querySelectorAll('label')].find(l=>l.textContent?.includes('Password'));
-    password?.insertAdjacentElement('afterend',wrap); if(!password)login.appendChild(wrap);bindPicker(wrap);
-  }
-  document.querySelectorAll<HTMLElement>('[data-language-picker]').forEach(el=>{const s=el.querySelector<HTMLSelectElement>('select');if(s&&s.value!==code)s.value=code;});
+  if(login&&!login.querySelector('[data-language-picker]')){const picker=makePicker('login-language');const password=[...login.querySelectorAll('label')].find(l=>l.textContent?.includes('Password'));password?.insertAdjacentElement('afterend',picker);if(!password)login.appendChild(picker);}
+  document.querySelectorAll<HTMLSelectElement>('[data-language-picker] select').forEach(s=>{if(s.value!==code)s.value=code;});
 }
+
 function bindPicker(wrap:HTMLElement){wrap.querySelector('select')?.addEventListener('change',e=>setLanguage((e.target as HTMLSelectElement).value));}
-function setLanguage(code:string){if(!languages.some(l=>l.code===code))return;localStorage.setItem(LANG_KEY,code);document.documentElement.lang=currentLanguage().bcp47;document.querySelectorAll<HTMLElement>('[data-language-picker] select').forEach(s=>(s as HTMLSelectElement).value=code);applyTextTranslations();window.dispatchEvent(new CustomEvent('edupath:languagechange',{detail:currentLanguage()}));}
+
+function setLanguage(code:string){
+  if(!languages.some(l=>l.code===code))return;
+  localStorage.setItem(LANG_KEY,code);
+  document.documentElement.lang=currentLanguage().bcp47;
+  document.querySelectorAll<HTMLSelectElement>('[data-language-picker] select').forEach(s=>{s.value=code;});
+  applyTextTranslations(document);
+  addSupportBadges();
+  window.dispatchEvent(new CustomEvent('edupath:languagechange',{detail:currentLanguage()}));
+}
 
 function patchVoice(){
-  const w=window as any;
-  const SR=w.SpeechRecognition||w.webkitSpeechRecognition;
+  const w=window as any;const SR=w.SpeechRecognition||w.webkitSpeechRecognition;
   if(SR?.prototype&&!SR.prototype.__edupathPatched){const start=SR.prototype.start;SR.prototype.start=function(...args:any[]){this.lang=currentLanguage().bcp47;return start.apply(this,args);};SR.prototype.__edupathPatched=true;}
   const synth=window.speechSynthesis as any;
   if(synth&&!synth.__edupathPatched){const speak=synth.speak.bind(synth);synth.speak=(utterance:SpeechSynthesisUtterance)=>{utterance.lang=currentLanguage().bcp47;const voices=synth.getVoices?.()||[];const exact=voices.find((v:SpeechSynthesisVoice)=>v.lang.toLowerCase()===currentLanguage().bcp47.toLowerCase());const family=voices.find((v:SpeechSynthesisVoice)=>v.lang.toLowerCase().startsWith(currentLanguage().code.toLowerCase()));if(exact||family)utterance.voice=exact||family;return speak(utterance);};synth.__edupathPatched=true;}
 }
 
-function addSupportBadges(){
-  document.querySelectorAll<HTMLElement>('.gpt-toolbar').forEach(toolbar=>{if(toolbar.querySelector('.language-support-badge'))return;const badge=document.createElement('span');badge.className='language-support-badge';badge.textContent=`Language: ${currentLanguage().native}`;toolbar.appendChild(badge);});
-  document.querySelectorAll<HTMLElement>('.exam-head,.learning-head').forEach(head=>{if(head.querySelector('.language-mini'))return;const mini=document.createElement('span');mini.className='language-mini';mini.textContent=`${currentLanguage().native}`;head.querySelector('div')?.appendChild(mini);});
-  document.querySelectorAll<HTMLElement>('.language-support-badge,.language-mini').forEach(b=>b.textContent=currentLanguage().native);
+function addSupportBadges(root:ParentNode=document){
+  root.querySelectorAll?.<HTMLElement>('.gpt-toolbar').forEach(toolbar=>{if(!toolbar.querySelector('.language-support-badge')){const badge=document.createElement('span');badge.className='language-support-badge';toolbar.appendChild(badge);}});
+  root.querySelectorAll?.<HTMLElement>('.exam-head,.learning-head').forEach(head=>{if(!head.querySelector('.language-mini')){const mini=document.createElement('span');mini.className='language-mini';head.querySelector('div')?.appendChild(mini);}});
+  document.querySelectorAll<HTMLElement>('.language-support-badge,.language-mini').forEach(b=>{b.textContent=currentLanguage().native;});
 }
 
-function enhance(){injectSelector();patchVoice();applyTextTranslations();addSupportBadges();document.documentElement.lang=currentLanguage().bcp47;}
-const observer=new MutationObserver(()=>enhance());observer.observe(document.body,{childList:true,subtree:true});window.addEventListener('edupath:languagechange',()=>{applyTextTranslations();addSupportBadges();});enhance();
+function enhance(root:ParentNode=document){injectSelector();patchVoice();applyTextTranslations(root);addSupportBadges(root);document.documentElement.lang=currentLanguage().bcp47;}
+
+function scheduleEnhance(nodes:Node[]){
+  if(scheduled)return;scheduled=true;
+  requestAnimationFrame(()=>{scheduled=false;injectSelector();patchVoice();for(const node of nodes){if(node.nodeType===Node.TEXT_NODE&&node.parentElement)applyTextTranslations(node.parentElement);else if(node instanceof HTMLElement){applyTextTranslations(node);addSupportBadges(node);}}document.documentElement.lang=currentLanguage().bcp47;});
+}
+
+const observer=new MutationObserver(mutations=>{const nodes:Node[]=[];for(const mutation of mutations){mutation.addedNodes.forEach(node=>nodes.push(node));}if(nodes.length)scheduleEnhance(nodes.slice(0,80));});
+observer.observe(document.body,{childList:true,subtree:true});
+window.addEventListener('edupath:languagechange',()=>{applyTextTranslations(document);addSupportBadges(document);});
+enhance(document);
 
 (window as any).EduPathI18n={languages,current:currentLanguage,setLanguage,translate};
