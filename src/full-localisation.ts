@@ -2,6 +2,7 @@ type AttrKey='placeholder'|'title'|'aria-label';
 type Target={kind:'text'|'attr'|'option';node:Text|HTMLElement;attr?:AttrKey;source:string};
 
 const LANG_KEY='edupath.language.v1';
+const SUPPORTED_CODES=['en','af','zu','xh','st','tn','nso','ts','ve','ss','nr'];
 const textSource=new WeakMap<Text,string>();
 const attrSource=new WeakMap<HTMLElement,Map<string,string>>();
 const optionSource=new WeakMap<HTMLOptionElement,{text:string;value:string}>();
@@ -37,4 +38,4 @@ window.addEventListener('edupath:languagechange',()=>void translateAll(document,
 const observer=new MutationObserver(mutations=>{if(code()==='en')return;const roots:HTMLElement[]=[];for(const m of mutations)m.addedNodes.forEach(n=>{if(n instanceof HTMLElement&&!n.closest('[data-no-i18n]'))roots.push(n);});if(roots.length)schedule(document);});observer.observe(document.body,{childList:true,subtree:true});
 const style=document.createElement('style');style.textContent=`.full-i18n-overlay{position:fixed;inset:0;z-index:99998;background:rgba(245,248,253,.94);display:grid;place-items:center;backdrop-filter:blur(6px)}.full-i18n-overlay[hidden]{display:none}.full-i18n-overlay>div{display:grid;justify-items:center;gap:10px;color:#0c1939;text-align:center;padding:28px}.full-i18n-overlay small{color:#65728d}.full-i18n-spinner{width:34px;height:34px;border:4px solid #d8e1f3;border-top-color:#4d5cff;border-radius:50%;animation:fullspin .8s linear infinite}.full-i18n-warning{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;max-width:760px;background:#7a2e0e;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18);font-size:13px}@keyframes fullspin{to{transform:rotate(360deg)}}`;document.head.appendChild(style);
 
-if(code()!=='en')window.setTimeout(()=>void translateAll(document,true),180);(window as any).EduPathFullI18n={translate:translateAll,clearCache:(c?:string)=>{if(c)localStorage.removeItem(cacheKey(c));else Object.keys(languageMeta).forEach(k=>localStorage.removeItem(cacheKey(k)));}};
+if(code()!=='en')window.setTimeout(()=>void translateAll(document,true),180);(window as any).EduPathFullI18n={translate:translateAll,clearCache:(c?:string)=>{if(c)localStorage.removeItem(cacheKey(c));else SUPPORTED_CODES.forEach(k=>localStorage.removeItem(cacheKey(k)));}};
