@@ -6,21 +6,31 @@ EduPath AI is the education-domain implementation of the Project Guardian operat
 
 ## Current implementation
 
-The current branch adds a working front-end foundation with:
+The current implementation includes:
 
 - Pyrneo-branded login and application shell;
 - user-type dropdown for Learner, Teacher, Parent/Guardian, Principal/School Administrator, District Official, Provincial Official, National Education Analyst, Platform Administrator and Support Administrator;
 - role-specific navigation and role-specific dashboards;
 - synthetic hackathon demo personas and data;
-- Learner geometry-remediation storyline;
-- school/district style analytics and digital-inclusion indicators;
 - one Ayanda text/voice assistant across the platform;
-- deterministic low-latency navigation commands before AI fallback;
-- browser speech recognition/synthesis fallback where supported;
+- permission-aware Agent Centre with 15 specialist agents;
+- Student GPT grounded in configured curriculum and approved teacher material;
+- learner/teacher LMS with published study material;
+- past-paper upload, guided practice and answer-sheet review;
+- Grade R–12 curriculum registry covering the phase subject sets and FET subject catalogue;
+- EduPath Nexus command centre with educator and workplace platform views;
+- student management workspace;
+- consent-based camera proctoring with observable-event reports and human review;
+- post-school career and workplace readiness pathways;
+- role-based Training Academy;
+- reports, audit logs and export;
+- local exam vault for browser-local exam papers, answer books and reports;
+- local / on-prem / South Africa cloud / hybrid sovereign deployment patterns;
+- multilingual website/assistant language synchronisation;
 - responsive desktop, tablet and mobile layout;
-- Guardian inheritance documentation.
+- Guardian inheritance, commercial-readiness and security/data-sovereignty documentation.
 
-> **Important:** Demo authentication and data in this phase are front-end/synthetic. Server-side identity, RBAC, database persistence, audit storage and external AI/voice providers are the next implementation layer and must not be represented as production-ready until completed and tested.
+> **Important:** The Render deployment is still a hackathon front-end demonstration. Demo authentication and several persistence layers are browser/local rather than production server implementations. Production identity, server-side RBAC, database/object-storage persistence, encryption key management, verified curriculum RAG, legal/privacy review, penetration testing, disaster recovery and operational SLAs are required before the platform should be represented as commercially production-ready.
 
 ## Run locally
 
@@ -36,19 +46,30 @@ npm run check
 npm run build
 ```
 
-## Demo flow
+## Recommended demo flow
 
-1. Select **Learner** and sign in with the prefilled synthetic demo account.
-2. Open Ayanda and ask: `I do not understand corresponding angles`.
-3. Ask: `Explain in isiZulu`.
-4. Sign out and select **Teacher** to see the teacher-specific workspace.
-5. Repeat for Principal, District or Provincial roles to demonstrate the ecosystem view.
+1. Sign in as **Learner**.
+2. EduPath Nexus opens the Digital Citizen command centre.
+3. Change the language on the website and confirm Ayanda/Student GPT follows the same preference.
+4. Open **Curriculum R–12** and browse grades/subjects.
+5. Open **Student GPT** and ask a grounded curriculum question.
+6. Open **Learning Hub** to show teacher-published study material.
+7. Open **Exam Practice** to upload a past paper and answer sheet.
+8. Open **Proctored Exams**, consent to the camera, create observable events and generate the report.
+9. Open **Career & Workplace** and progress an employment-readiness pathway.
+10. Sign in as **Teacher / Principal / Administrator** to demonstrate Student Management, Training Academy, Reports, Data Sovereignty and Agent Centre.
 
 ## Security model
 
 The user-type dropdown is a requested login context only. In the production architecture, server-side identity and assigned roles are authoritative. Selecting a privileged user type must never grant privilege.
 
-See `docs/architecture/PROJECT-GUARDIAN-INHERITANCE.md` and `docs/SECURITY.md`.
+Proctoring is deliberately transparent: it logs observable browser/camera-state events and does not make an automatic cheating decision or infer emotion, disability, health or identity.
+
+See:
+- `docs/architecture/PROJECT-GUARDIAN-INHERITANCE.md`
+- `docs/SECURITY.md`
+- `docs/SECURITY-DATA-SOVEREIGNTY.md`
+- `docs/COMMERCIAL-READINESS.md`
 
 ## Branding
 
@@ -56,4 +77,4 @@ The interface uses the official Pyrneo wordmark hosted by Pyrneo. No generated o
 
 ## Data
 
-All learner, teacher, school, performance and digital-inclusion values displayed in demo mode are synthetic and are not live government or school records.
+All learner, teacher, school, performance, proctoring and digital-inclusion records displayed in demo mode are synthetic or locally generated and are not live government or school records.
