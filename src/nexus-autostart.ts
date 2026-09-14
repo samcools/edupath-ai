@@ -1,3 +1,5 @@
+export {};
+
 const KEY='edupath.nexus.autostart.done';
 function tick(){
   const login=document.querySelector('.login-page');
