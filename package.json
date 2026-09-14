@@ -1,23 +1,26 @@
 {
   "name": "edupath-ai",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "start": "vite preview --host 0.0.0.0 --port ${PORT:-10000}",
+    "start": "node server.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "check": "tsc --noEmit"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
+    "express": "latest",
+    "jspdf": "latest",
+    "lucide-react": "latest",
+    "nodemailer": "latest",
+    "pdfjs-dist": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest",
-    "pdfjs-dist": "latest",
-    "tesseract.js": "latest"
+    "tesseract.js": "latest",
+    "typescript": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
     "@types/react": "latest",
