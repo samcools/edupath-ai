@@ -12,7 +12,7 @@ let cleanupFns:(()=>void)[]=[];
 function now(){return new Date().toISOString()}
 function log(type:string,severity:ProctorEvent['severity'],detail:string){
   if(!session)return;session.events.push({time:now(),type,severity,detail});record(`proctor.${type}`,severity==='info'?'info':'warning',{objectType:'proctor-session',objectId:session.id,metadata:{detail}});
-  window.dispatchEvent(new CustomEvent('edupath:proctor-event',{detail:session.events.at(-1)}));
+  window.dispatchEvent(new CustomEvent('edupath:proctor-event',{detail:session.events[session.events.length-1]}));
 }
 function stopMedia(){stream?.getTracks().forEach(t=>t.stop());stream=null}
 function clearListeners(){cleanupFns.splice(0).forEach(fn=>fn())}
